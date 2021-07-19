@@ -24,17 +24,6 @@
     (println (str n " is prime"))
     (println (str n " is not prime"))))
 
-(defn get-first-n-primes
-  "Returns the first n many primes."
-  [n]
-  (loop [i 3 all-primes [2]]
-    (if (= (count all-primes) n)
-      all-primes
-      (recur (+ i 2)
-        (if (is-prime? i)
-          (conj all-primes i)
-          all-primes)))))
-
 (defn get-divisors
   "Returns all factors of n. Whole numbers assumed."
   [n]
@@ -170,17 +159,6 @@
               ones)
             (inc position)))))))
 
-(defn first-n-evil-numbers
-  "Generates n many evil numbers."
-  [n]
-  (loop [i 0 evil-numbers []]
-    (if (= n (count evil-numbers))
-      evil-numbers
-      (recur (inc i)
-        (if (is-evil-number? i)
-          (conj evil-numbers i)
-          evil-numbers)))))
-
 (defn is-odious-number?
   "Tests if a positive number has an odd number of 1s in its binary form."
   [n]
@@ -234,8 +212,37 @@
           (conj all-numbers i)
           all-numbers)))))
 
+(defn first-many-type-numbers-custom
+  "Given a test for some attribute of integers, finds n many integers that satisfy that test.
+  Adds more options such as what number to start with and what to increment by."
+  [n is-number-type? max-checks start-at start-with inc-by]
+  (loop [i start-at all-numbers [start-with]]
+    (if (or (= (count all-numbers) n) (> i max-checks))
+      all-numbers
+      (recur (+ i inc-by)
+        (if (is-number-type? i)
+          (conj all-numbers i)
+          all-numbers)))))
+
+(defn get-first-n-primes
+  "Returns the first n many primes."
+  [n max-checks]
+  (first-many-type-numbers-custom n #(is-prime? %) max-checks 3 2 2))
+
+(defn get-first-n-evil-numbers
+  "Generates n many evil numbers."
+  [n max-checks]
+  ;; we have to drop the first element (nil) that we set by assigning start-with to nil
+  (rest (first-many-type-numbers-custom (+ n 1) #(is-evil-number? %) max-checks 0 nil 1)))
+
 (defn -main
   "Testing compiled execution time against REPL time."
   [& args]
   ;; do not run the following example unless you have time to kill.
-  (time (first-many-type-numbers 10 #(is-k-hyperperfect? % 1) 2000)))
+  (do
+    (println "How long to generate the first 2000 hyperperfect numbers.")
+    (time (first-many-type-numbers 10 #(is-k-hyperperfect? % 1) 2000))
+    (println "The first 100 prime numbers:")
+    (println (get-first-n-primes 100 10000))
+    (println "The first 100 evil numbers:")
+    (println (get-first-n-evil-numbers 100 10000))))
