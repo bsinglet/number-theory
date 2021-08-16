@@ -4,8 +4,7 @@
 ;;
 ;; Created by: Benjamin M. Singleton
 ;; Created: 10-03-2020
-(ns number-theory.core
-  (:gen-class))
+(ns number-theory.core)
 
 (defn is-prime?
   "Determines if a number is prime or not. Defaults to true."
@@ -235,14 +234,55 @@
   ;; we have to drop the first element (nil) that we set by assigning start-with to nil
   (rest (first-many-type-numbers-custom (+ n 1) #(is-evil-number? %) max-checks 0 nil 1)))
 
+(defn get-first-n-square-numbers
+  "Returns a non-lazy list of square numbers."
+  [n]
+  (map #(* % %) (range n)))
+
+(defn find-next-square-number
+  "Given a number x, find n, the smallest square number greater than x.
+  Returns the *square root* of n. For example, 9 is the smallest square
+  number above 8, so (find-next-square-number 8) returns 3."
+  [x]
+  (loop [n 1]
+    (if (>= (* n n) x)
+      n
+      (recur (inc n)))))
+
+(defn approximate-square-root
+  "Approximates the square root of x through a certain number of
+  iterations. Entirely superfluous on any computer that can run Clojure,
+  but still a good illustration of the algorithm \"Heron's Method\"."
+  ([x iterations]
+    ; we need to start with an overestimation, so let's use the sqrt of
+    ; the first square number >= x
+    (approximate-square-root x iterations (find-next-square-number x)))
+  ([x iterations previous]
+    (if (= iterations 0)
+      previous
+      (recur x (- iterations 1)
+        (/ (+ previous (/ x previous)) 2)))))
+
+; This doesn't improve the performance of approximate-square-root
+; normally, but it does if you call it multiple times with different
+; values for iterations.
+(def memoized-approximate-square-root
+  (memoize approximate-square-root))
+
 (defn -main
-  "Testing compiled execution time against REPL time."
+  "Illustrates some of the functions in this library."
   [& args]
-  ;; do not run the following example unless you have time to kill.
   (do
+    ;; do not run the following example unless you have time to kill.
     (println "How long to generate the first 2000 hyperperfect numbers.")
     (time (first-many-type-numbers 10 #(is-k-hyperperfect? % 1) 2000))
     (println "The first 100 prime numbers:")
     (println (get-first-n-primes 100 10000))
     (println "The first 100 evil numbers:")
-    (println (get-first-n-evil-numbers 100 10000))))
+    (println (get-first-n-evil-numbers 100 10000))
+    (println (str "Approximating square root of 8 to 10 iterations."))
+    (loop [n 0]
+      (println (str "Iteration " n ": " (memoized-approximate-square-root 8 n) " ~= " (double (memoized-approximate-square-root 8 n))))
+      (if (< n 10)
+        (recur (inc n))))
+    ))
