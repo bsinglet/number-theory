@@ -269,6 +269,43 @@
 (def memoized-approximate-square-root
   (memoize approximate-square-root))
 
+(defn get-mediant
+  "Find the mathematical mediant of two fractions. Given a/b and c/d, the
+  mediant is the fraction (a+c)/(b+d). This is guaranteed to lie somewhere
+  between a/b and c/d, although not precisely in the middle."
+  [x y]
+  (assoc (assoc {} :denominator (+ (:denominator x) (:denominator y)))
+    :numerator (+ (:numerator x) (:numerator y))))
+
+(defn absolute-fraction-difference
+  "Returns the absolute difference of a decimal number and my weird
+  implementation of fractions."
+  [decimal-number fraction-map]
+  (Math/abs
+    (- decimal-number (/ (:numerator fraction-map) (:denominator fraction-map)))))
+
+(defn stringify-fraction
+  "Constructs a string representation one of my weird fractions, which are
+  maps with keys :numerator and :denominator."
+  [x]
+  (str "(" (:numerator x) "/" (:denominator x) ")"))
+
+(defn approximate-decimal-number
+  "My implementation of using Farey sequences to find the closet fraction to a
+  given decimal, within a certain limit of precision."
+  [decimal-number denominator-limit]
+  (loop [left-bound {:numerator 0 :denominator 1} right-bound {:numerator 1 :denominator 1}]
+    (let [mediant (get-mediant left-bound right-bound)]
+      ; (println (str "Looping with mediant " (stringify-fraction mediant) ", left-bound " (stringify-fraction left-bound) " right-bound " (stringify-fraction right-bound)))
+      (if (> (:denominator mediant) denominator-limit)
+        (if (< (absolute-fraction-difference decimal-number left-bound)
+          (absolute-fraction-difference decimal-number right-bound))
+            left-bound
+            right-bound)
+        (if (< decimal-number (/ (:numerator mediant) (:denominator mediant)))
+          (recur left-bound mediant)
+          (recur mediant right-bound))))))
+
 (defn -main
   "Illustrates some of the functions in this library."
   [& args]
