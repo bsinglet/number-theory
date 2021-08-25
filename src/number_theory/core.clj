@@ -9,12 +9,14 @@
 (defn is-prime?
   "Determines if a number is prime or not. Defaults to true."
   [n]
-  (loop [divisor 2]
-    (if (= 0 (mod n divisor))
-      false
-      (if (>= divisor (/ n 2))
-        true
-        (recur (inc divisor))))))
+  (if (= n 2)
+    true
+    (loop [divisor 2]
+      (if (= 0 (mod n divisor))
+        false
+        (if (>= divisor (/ n 2))
+          true
+          (recur (inc divisor)))))))
 
 (defn print-is-prime
   "Prints out the result of the is-prime function."
